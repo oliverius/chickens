@@ -3,7 +3,8 @@
 
 <head>
   <meta charset="utf-8">
-  <title>D3 with chickens! - 02 - horizontal bars</title>
+  <title>D3 with chickens! - 02 - vertical bars</title>
+  <link rel="shortcut icon" href="img/favicon.ico" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.6.1/d3.min.js"
     integrity="sha512-MefNfAGJ/pEy89xLOFs3V6pYPs6AmUhXJrRlydI/9wZuGrqxmrdQ80zKHUcyadAcpH67teDZcBeS6oMJLPtTqw=="
     crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -14,7 +15,7 @@
   <figure id="chart">
     <figcaption>
       <h3>D3 with chickens!</h3>
-      <h4>Weekly egg production with horizontal bars</h4>
+      <h4>Weekly egg production with vertical bars</h4>
     </figcaption>
   </figure>
 
@@ -36,12 +37,17 @@
 
       // data manipulation
 
-      const chickenNames = data.map(item => item.chicken);
-      const numberOfEggs = data.map(item => item.eggs);
+      const chickenNames = data.map(item => item.chicken); // TODO REMOVE
+      const eggsPerChicken = data.map(item => item.eggs); // todo remove
 
       const minNumberOfEggs = 0; // We always want this graph to start from 0
-      const maxNumberOfEggs = d3.max(numberOfEggs);
-      
+      const maxNumberOfEggs = d3.sum(data, item => item.eggs);
+
+      const stackProperties = ['eggs'];
+      const stackGenerator = d3.stack().keys(stackProperties);
+      const stackedSeries = stackGenerator(data);
+      console.log(stackedSeries)
+
       // define drawing area
 
       const svg = d3.select(elementId)
@@ -55,26 +61,26 @@
 
       // define x-axis
 
-      const xScale = d3.scaleLinear()
-        .domain([minNumberOfEggs, maxNumberOfEggs])
-        .range([0, width]);
+      const xScale = d3.scaleBand()
+        .domain(chickenNames)
+        .range([0, width])
+        .padding(0.1);
 
-      const xAxisTicks = xScale.ticks()
-        .filter(Number.isInteger);
-
-      const xAxis = d3.axisBottom(xScale)
-        .tickValues(xAxisTicks)
-        .tickFormat(d3.format('d'));
+      const xAxis = d3.axisBottom(xScale);
 
       // define y-axis
-        
-      const yScale = d3.scaleBand()
-        .domain(chickenNames)
-        .range([0, height])
-        .padding(0.1)
 
-      const yAxis = d3.axisLeft(yScale);
-        
+      const yScale = d3.scaleLinear()
+        .domain([minNumberOfEggs, maxNumberOfEggs])
+        .range([height, 0]);
+
+      const yAxisTicks = yScale.ticks()
+        .filter(Number.isInteger);
+
+      const yAxis = d3.axisLeft(yScale)
+        .tickValues(yAxisTicks)
+        .tickFormat(d3.format('d'));
+
       // draw x-axis
 
       svg.append('g')
@@ -82,21 +88,34 @@
         .call(xAxis);
 
       // draw y-axis
-      
+
       svg.append('g')
         .call(yAxis);
-
-      // draw bars
       
+      // draw stacked bars
+
       svg.selectAll('bars')
-        .data(data)
+        .data(stackedSeries[0])
+        .call(d => console.log(d))
         .enter()
         .append('rect')
-        .attr('x', 0)
-        .attr('y', item => yScale(item.chicken))
-        .attr('width', item => xScale(item.eggs))
-        .attr('height', yScale.bandwidth())
-        .attr('fill', 'indianred');
+        .attr('x', 20)
+        .attr('y', series => yScale(series[1]))
+        .attr('width', 40)
+        .attr('height', series => yScale(series[0]) - yScale(series[1]))
+        .call(series => console.log(yScale(series[0])))
+
+      //[ [[0,2],[0,3],[0,0],[0,5],[0,1]] ]
+
+      // svg.selectAll('bars')
+      //   .data(data)
+      //   .enter()
+      //   .append('rect')
+      //   .attr('x', item => xScale(item.chicken))
+      //   .attr('y', item => yScale(item.eggs))
+      //   .attr('width', xScale.bandwidth())
+      //   .attr('height', item => height - yScale(item.eggs))
+      //   .attr('fill', 'indianred');
     }
   </script>
 

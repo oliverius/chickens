@@ -3,7 +3,8 @@
 
 <head>
   <meta charset="utf-8">
-  <title>D3 with chickens! - 01 - vertical bars</title>
+  <title>D3 with chickens! - 03 - horizontal bars</title>
+  <link rel="shortcut icon" href="img/favicon.ico"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.6.1/d3.min.js"
     integrity="sha512-MefNfAGJ/pEy89xLOFs3V6pYPs6AmUhXJrRlydI/9wZuGrqxmrdQ80zKHUcyadAcpH67teDZcBeS6oMJLPtTqw=="
     crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -14,7 +15,7 @@
   <figure id="chart">
     <figcaption>
       <h3>D3 with chickens!</h3>
-      <h4>Weekly egg production with vertical bars</h4>
+      <h4>Weekly egg production with horizontal bars</h4>
     </figcaption>
   </figure>
 
@@ -37,10 +38,10 @@
       // data manipulation
 
       const chickenNames = data.map(item => item.chicken);
-      const numberOfEggs = data.map(item => item.eggs);
+      const eggsPerChicken = data.map(item => item.eggs);
 
       const minNumberOfEggs = 0; // We always want this graph to start from 0
-      const maxNumberOfEggs = d3.max(numberOfEggs);
+      const maxNumberOfEggs = d3.max(eggsPerChicken);
       
       // define drawing area
 
@@ -55,26 +56,26 @@
 
       // define x-axis
 
-      const xScale = d3.scaleBand()
-        .domain(chickenNames)
-        .range([0, width])
-        .padding(0.1);
-      
-      const xAxis = d3.axisBottom(xScale);
-      
-      // define y-axis
-
-      const yScale = d3.scaleLinear()
+      const xScale = d3.scaleLinear()
         .domain([minNumberOfEggs, maxNumberOfEggs])
-        .range([height, 0]);
+        .range([0, width]);
 
-      const yAxisTicks = yScale.ticks()
+      const xAxisTicks = xScale.ticks()
         .filter(Number.isInteger);
 
-      const yAxis = d3.axisLeft(yScale)
-        .tickValues(yAxisTicks)
+      const xAxis = d3.axisBottom(xScale)
+        .tickValues(xAxisTicks)
         .tickFormat(d3.format('d'));
 
+      // define y-axis
+        
+      const yScale = d3.scaleBand()
+        .domain(chickenNames)
+        .range([0, height])
+        .padding(0.1)
+
+      const yAxis = d3.axisLeft(yScale);
+        
       // draw x-axis
 
       svg.append('g')
@@ -92,10 +93,10 @@
         .data(data)
         .enter()
         .append('rect')
-        .attr('x', item => xScale(item.chicken))
-        .attr('y', item => yScale(item.eggs))
-        .attr('width', xScale.bandwidth())
-        .attr('height', item => height - yScale(item.eggs))
+        .attr('x', 0)
+        .attr('y', item => yScale(item.chicken))
+        .attr('width', item => xScale(item.eggs))
+        .attr('height', yScale.bandwidth())
         .attr('fill', 'indianred');
     }
   </script>
